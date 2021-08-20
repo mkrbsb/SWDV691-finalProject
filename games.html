@@ -1,0 +1,277 @@
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  
+    <title>Lawn Game Olympics Games</title>
+  </head>
+  <link rel="stylesheet" href="styles1.css"/>
+  <script
+  src="https://code.jquery.com/jquery-3.6.0.min.js"
+  integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+  crossorigin="anonymous"></script>
+  <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="sweetalert2.all.min.js"></script>
+<!--jQuery brackets-->
+<!-- <script type="text/javascript" src="jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="jquery.bracket.min.js"></script>
+<link rel="stylesheet" type="text/css" href="jquery.bracket.min.css" /> -->
+
+<!-- <script src="//code.jquery.com/jquery-1.11.3.min.js"></script> -->
+<script src="jquery-bracket-master2/dist/jquery.bracket.min.js"></script>
+<link href="jquery-bracket-master2/dist/jquery.bracket.min.css" rel="stylesheet">
+
+<!--jQuery brackets-->
+  <style>
+      table {
+          width: 100%;
+          margin-left: auto;
+          margin-right: auto;
+      }
+      th, td {
+        border: 1px solid black;
+        
+      }
+      th {
+        padding: 25px;
+      }
+      td {
+        padding: 15px;
+      }
+  </style>
+  <body>
+    <div class="jumbotron jumbotron-fluid">
+        <div class="container">
+          <h1 class="display-4">Lawn Game Olympics Games</h1>
+        </div>
+    </div>
+
+    <div class= "topnav"; style="float:left;text-align:right">
+
+        <a href="http://legendarygreenflash.com/players.html">Home</a>
+        <a href="http://legendarygreenflash.com/teams.html">Teams</a>
+        <a href="http://legendarygreenflash.com/games.html">Games</a>
+        <a href="http://legendarygreenflash.com/points.html">Points</a>
+
+    </div>
+    <br>
+    <br>
+    <div class="row">
+        <div class="col">*Teams will be randomly paired here to play each other. When a game has been completed, the points will be added here. Once all games have been completed and points saved, the games can be cleared and new games created. A teams total points will be tracked on the Points page, the team with the most points wins. Also, a team name must be created before that team can be added to a game. Once games have been created, no new teams can be added. The process must be started over.</div>
+        <br>
+        <div><h5 style="display: inline-block; margin-right: 50px;">Number of Teams: <span id="teamsCount"></span></h5><button id="gpBtn" style="display:none;" onclick="createGames('group')">Create Group Games</button><button id="bracketBtn" onclick="createGames('bracket')" style="display:none;">Create Games</button><button id="clearBtn" onclick="clearGames()" style="display:none; color: white; background-color: crimson; margin-left: 30px;">Clear Games</button></div>
+    </div>
+    <br>
+    <br>
+    <div class="container">
+          <div class="row">
+              <div class="col-8">
+                    <div id="gamesTitle">
+                      <h3 style="text-align: center; text-decoration: underline;">Games</h3>
+                      <p id="gamesWarning" style="text-align: center;">No games have been created</p>
+                      <table id="gamesTable" style="display:none; border-collapse: collapse;">
+                         
+                      </table> 
+                      <div class="demo">
+
+                      </div>
+                    </div>
+              </div>
+          </div>
+    </div>
+
+  
+</body>
+<script>
+    $(document).ready(function(){
+       
+        var baseURL = 'http://legendarygreenflash.com/';
+        var d;
+        $.get( baseURL+"teamCount.php/", function( data ) {
+            d = jQuery.parseJSON(data);
+
+            $('#teamsCount').html(d);
+            if(d <= 3){
+                $('#gpBtn').show();
+            } else {
+                $('#bracketBtn').show();
+            }
+
+    });
+    var singleElimination;
+
+        var baseURL = 'http://legendarygreenflash.com/';
+        $.get( baseURL+"getGames.php/", function( data ) {
+            var d = jQuery.parseJSON(data);
+            if(d.length > 0){
+                $('#clearBtn').show();
+                $('#gamesWarning').hide();
+            }
+
+                var teams = [];
+                var count = 0;
+                var t1 = {};//changed from ''
+                var t2 = {};//changed from ''
+
+                var gamesTableList = '';
+                $.each( d, function( i, v ){
+                   // console.log(v);
+                    var bothTeams = v.split(',');
+
+                    bT1 = bothTeams[1].split(' ');
+                    bT3 = bothTeams[3].split(' ');
+              
+                    var hideSave1 = '';
+                    var hideSave2 = '';
+                    if($.isNumeric(bothTeams[5])){
+                        hideSave1 = 'display: none;';
+                    } 
+                    if($.isNumeric(bothTeams[6])){
+                        hideSave2 = 'display: none;';
+                    } 
+                    var color1 = '';
+                    var color2 = '';
+  
+                    if($.isNumeric(bothTeams[5])) {
+                        if($.isNumeric(bothTeams[6])) {
+                            if(parseInt(bothTeams[5]) > parseInt(bothTeams[6])) {
+                                color1 = 'background-color: green; color: white;';
+                                color2 = 'background-color: crimson; color: white;';
+                            } else {
+                                color1 = 'background-color: crimson; color: white;';
+                                color2 = 'background-color: green; color: white;';
+                            }
+                        }
+                    }
+   
+
+                    gamesTableList += '<tr><th id ="game-'+bT1[1]+'" value ="'+bT1[1]+'" style="'+color1+'">'+bothTeams[0]+'</th><th><input style="margin-bottom: 5px;" type="text" id="teamPoints-'+bT1[1]+'" name="Team Points" minlength="1" value="'+bothTeams[5]+'"><button style="'+hideSave1+'" id = "saveGamePointsBtn-'+bT1[1]+'" onclick="saveGamePoints('+bothTeams[4]+', '+bT1[1]+', 1)">Save</button></th><th>VS</th><th><input style="margin-bottom: 5px;" type="text" id="teamPoints-'+bT3[1]+'" name="Team Points" minlength="1" value="'+bothTeams[6]+'"><button style="'+hideSave2+'" id = "saveGamePointsBtn-'+bT3[1]+'" onclick="saveGamePoints('+bothTeams[4]+', '+bT3[1]+', 2)">Save</button></th><th id ="game-'+bT3[1]+'" value ="'+bT3[1]+'" style="'+color2+'">'+bothTeams[2]+'</th></tr>';
+        
+                    color1 = '';
+                    color2 = '';
+                    $('#gamesTable').html(gamesTableList);
+                     $('#gamesTable').show();
+
+                });
+
+        });
+});
+
+
+
+function createGames(type) {
+    var baseURL = 'http://legendarygreenflash.com/';
+    var type = $.trim(type);
+
+  $.post( baseURL+"createGames.php/",{type:type}, function( data ) {
+      console.log(data);
+    if(data == 'odd'){
+        Swal.fire({
+                title: 'There are an odd number of teams.',
+                text: 'Please add one more team (2 players) to create games. Please remove all teams, add the 2 players, and generate teams with the 2 new players.',
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Ok'
+                }).then((result) => {
+                if (result.isConfirmed) {
+                
+                }
+            })
+      //  alert('There are an odd number of teams, please add one more to create games');
+    } else if(data == 2){
+        //console.log('name');
+        Swal.fire({
+                title: 'Not all teams have entered their team name.',
+                text: 'Please add a team name for every team before creating games.',
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Ok'
+                }).then((result) => {
+                if (result.isConfirmed) {
+                
+                }
+            })
+    } else {
+        //console.log('else');
+        location.reload();
+    }
+    
+  });
+}
+
+function clearGames() {
+    var baseURL = 'http://legendarygreenflash.com/';
+    $.post( baseURL+"checkGameStatus.php/", function( data ) {
+        //var d = jQuery.parseJSON(data);
+        //console.log('print'+data+' time');
+        if(data == 1){
+            Swal.fire({
+                title: 'Please input all the game scores before clearing.',
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Ok'
+                }).then((result) => {
+                if (result.isConfirmed) {
+                
+                }
+            })
+        } else {
+            console.log('delete');
+            Swal.fire({
+                title: 'Are you sure you to clear the games?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete them!'
+                }).then((result) => {
+                if (result.isConfirmed) {
+                    
+                    $.post( baseURL+"clearGames.php/", function( data ) {
+                        var d = jQuery.parseJSON(data);
+                        //console.log(d);
+                        
+                    });
+                    Swal.fire(
+                    'Deleted!',
+                    'Your file has been deleted.',
+                    'success'
+                    )
+                    location.reload();
+                }
+            })
+        }
+    });
+}
+function saveGamePoints(gameID, teamID, team) {
+    var gameID = gameID;
+    var teamID = parseInt(teamID);
+    var team = team;
+    var points = $('#teamPoints-'+teamID).val();
+    console.log(points);
+    var gamePoints = parseInt(points);
+    if($.isNumeric(gamePoints) ){
+
+
+        var baseURL = 'http://legendarygreenflash.com/';
+        $.post( baseURL+"saveGamePoints.php/", {gameID:gameID, teamID:teamID, gamePoints:gamePoints, team:team}, function( data ) {
+       
+            $.post( baseURL+"saveTotalPoints.php/", {teamID:teamID, gamePoints:gamePoints}, function( data ) {
+                d = $.trim(data);
+                if(d == "success"){
+                    $('#saveGamePointsBtn-'+teamID).hide();
+                    location.reload();
+                }
+            });
+        });
+    } else {
+        alert('Not a number');
+    }
+    points = '';
+    
+}
+</script>
+</html>
